@@ -14,6 +14,7 @@ type scene struct {
 	r *sdl.Renderer
 
 	bg    *sdl.Texture
+	bgt   int32
 	pipes pipes
 	bird  bird
 }
@@ -87,6 +88,7 @@ func (s *scene) run(fps float64) {
 func (s *scene) update() {
 	s.pipes.update()
 	s.bird.update()
+	s.bgt = (s.bgt + 1) % 2000
 
 	if s.pipes.hits(&s.bird) {
 		s.bird.dead = true
@@ -96,7 +98,7 @@ func (s *scene) update() {
 func (s *scene) draw() {
 	s.r.Clear()
 
-	s.r.Copy(s.bg, nil, &sdl.Rect{X: 0, Y: 0, W: windowWidth, H: windowHeight})
+	s.r.Copy(s.bg, &sdl.Rect{X: s.bgt, Y: 0, W: windowWidth, H: windowHeight}, nil)
 
 	s.bird.draw(s.r)
 	s.pipes.draw(s.r)
