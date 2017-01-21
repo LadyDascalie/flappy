@@ -39,7 +39,7 @@ func main() {
 
 	trippyTitle(renderer)
 
-	scene, err := newScene(renderer, 1)
+	scene, err := newScene(renderer, 10, 1)
 	if err != nil {
 		log.Fatalf("could not create scene: %v", err)
 	}
