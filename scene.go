@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"math/rand"
 
 	"sync"
 
@@ -26,14 +26,16 @@ func newScene(r *sdl.Renderer, speed int32, gravity float64) (s *scene, err erro
 		return nil, fmt.Errorf("could not load background texture: %v", err)
 	}
 
-	s.pipes = pipes{
-		speed: speed,
-		pipe: pipe{
-			pos: windowWidth,
+	s.pipes = pipes{speed: speed}
+
+	for i := 0; i < 10; i++ {
+		s.pipes.pipes = append(s.pipes.pipes, &pipe{
+			pos: windowWidth + int32(rand.Intn(2*windowWidth)),
 			w:   52,
-			h:   320,
-		},
+			h:   int32(rand.Intn(windowHeight)),
+		})
 	}
+
 	s.pipes.tex, err = img.LoadTexture(r, "res/imgs/pipe.png")
 	if err != nil {
 		return nil, fmt.Errorf("could not load pipe texture: %v", err)
@@ -90,26 +92,34 @@ func (s *scene) draw() {
 }
 
 type pipes struct {
-	pipe  pipe
+	pipes []*pipe
 	tex   *sdl.Texture
 	speed int32
 }
 
-func (p *pipes) update() {
-	p.pipe.pos -= p.speed
+func (pp *pipes) update() {
+	for _, p := range pp.pipes {
+		p.pos -= pp.speed
+		if p.pos < -p.w {
+			p.pos = windowWidth + int32(rand.Intn(windowWidth))
+		}
+	}
 }
 
 func (pp *pipes) draw(r *sdl.Renderer) {
-	//for _, p := range pp.pipe {
-	p := pp.pipe
-	rect := &sdl.Rect{X: p.pos, Y: windowHeight - p.h, W: p.w, H: p.h}
-	log.Printf("painting on %+v", rect)
-	r.Copy(pp.tex, nil, rect)
-	//}
+	for _, p := range pp.pipes {
+		rect := &sdl.Rect{X: p.pos, Y: windowHeight - p.h, W: p.w, H: p.h}
+		r.Copy(pp.tex, nil, rect)
+	}
 }
 
-func (p pipes) hits(b *bird) bool {
-	return p.pipe.hits(b)
+func (pp *pipes) hits(b *bird) bool {
+	for _, p := range pp.pipes {
+		if p.hits(b) {
+			return true
+		}
+	}
+	return false
 }
 
 type pipe struct {
@@ -117,19 +127,17 @@ type pipe struct {
 	w, h int32
 }
 
-func (p pipe) hits(b *bird) bool {
-	return b.y+b.h >= p.h && b.x+b.w > p.pos && b.x < p.pos+p.w
+func (p *pipe) hits(b *bird) bool {
+	return b.y+b.h >= (windowHeight-p.h) && b.x+b.w > p.pos && b.x < p.pos+p.w
 }
 
 type bird struct {
-	x, y    int32
-	w, h    int32
-	speed   float64
-	gravity float64
-	dead    bool
-	frames  []*sdl.Texture
-	frame   int
-	mu      sync.Mutex
+	x, y, w, h     int32
+	speed, gravity float64
+	dead           bool
+	frames         []*sdl.Texture
+	frame          int
+	mu             sync.Mutex
 }
 
 func (b *bird) update() {
