@@ -32,13 +32,15 @@ func newScene(r *sdl.Renderer, speed int32, gravity float64) (s *scene, err erro
 		s.pipes.pipes = append(s.pipes.pipes, &pipe{
 			pos: windowWidth + int32(rand.Intn(2*windowWidth)),
 			w:   52,
-			h:   int32(rand.Intn(windowHeight)),
+			h:   int32(rand.Intn(windowHeight / 2)),
+			up:  rand.Intn(10) > 4,
 		})
 	}
 
 	s.pipes.tex, err = img.LoadTexture(r, "res/imgs/pipe.png")
 	if err != nil {
 		return nil, fmt.Errorf("could not load pipe texture: %v", err)
+
 	}
 
 	s.bird = bird{
@@ -109,7 +111,14 @@ func (pp *pipes) update() {
 func (pp *pipes) draw(r *sdl.Renderer) {
 	for _, p := range pp.pipes {
 		rect := &sdl.Rect{X: p.pos, Y: windowHeight - p.h, W: p.w, H: p.h}
-		r.Copy(pp.tex, nil, rect)
+		flip := sdl.FLIP_NONE
+		if !p.up {
+			rect.H = p.h
+			rect.Y = 0
+			flip = sdl.FLIP_VERTICAL
+		}
+
+		r.CopyEx(pp.tex, nil, rect, 0, nil, flip)
 	}
 }
 
@@ -125,10 +134,17 @@ func (pp *pipes) hits(b *bird) bool {
 type pipe struct {
 	pos  int32
 	w, h int32
+	up   bool
 }
 
 func (p *pipe) hits(b *bird) bool {
-	return b.y+b.h >= (windowHeight-p.h) && b.x+b.w > p.pos && b.x < p.pos+p.w
+	if b.x+b.w <= p.pos || b.x >= p.pos+p.w {
+		return false
+	}
+	if !p.up {
+		return b.y <= p.h
+	}
+	return b.y+b.h >= windowHeight-p.h
 }
 
 type bird struct {
