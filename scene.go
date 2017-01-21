@@ -59,10 +59,27 @@ func newScene(r *sdl.Renderer, speed int32, gravity float64) (s *scene, err erro
 	return s, nil
 }
 
+func (s *scene) restart() {
+	s.pipes.pipes = nil
+	for i := 0; i < 10; i++ {
+		s.pipes.pipes = append(s.pipes.pipes, &pipe{
+			pos: windowWidth + int32(rand.Intn(2*windowWidth)),
+			w:   52,
+			h:   int32(rand.Intn(windowHeight / 2)),
+			up:  rand.Intn(10) > 4,
+		})
+	}
+	s.bird.y = windowHeight / 2
+	s.bird.dead = false
+	s.bird.speed = 0
+}
+
 func (s *scene) run(fps float64) {
-	for !s.bird.dead {
-		s.update()
-		s.draw()
+	for {
+		if !s.bird.dead {
+			s.update()
+			s.draw()
+		}
 		sdl.Delay(uint32(1000 / fps))
 	}
 }
@@ -104,6 +121,8 @@ func (pp *pipes) update() {
 		p.pos -= pp.speed
 		if p.pos < -p.w {
 			p.pos = windowWidth + int32(rand.Intn(windowWidth))
+			p.h = int32(rand.Intn(windowHeight))
+			p.up = rand.Intn(10) > 4
 		}
 	}
 }

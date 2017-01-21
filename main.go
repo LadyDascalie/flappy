@@ -50,7 +50,11 @@ loop:
 		switch event := sdl.WaitEvent().(type) {
 		case *sdl.QuitEvent:
 			break loop
-		case *sdl.KeyUpEvent:
+		case *sdl.KeyUpEvent, *sdl.MouseButtonEvent:
+			if scene.bird.dead {
+				scene.restart()
+				continue
+			}
 			scene.bird.jump()
 		default:
 			log.Printf("igoring event of type %T", event)
