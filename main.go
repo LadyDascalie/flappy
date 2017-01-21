@@ -39,17 +39,19 @@ func main() {
 
 	trippyTitle(renderer)
 
-	scene, err := newScene(renderer)
+	scene, err := newScene(renderer, 1)
 	if err != nil {
 		log.Fatalf("could not create scene: %v", err)
 	}
-	scene.drawFrame()
+	go scene.run(50)
 
 loop:
 	for {
 		switch event := sdl.WaitEvent().(type) {
 		case *sdl.QuitEvent:
 			break loop
+		case *sdl.KeyUpEvent:
+			scene.bird.jump()
 		default:
 			log.Printf("igoring event of type %T", event)
 		}

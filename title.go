@@ -19,6 +19,7 @@ func trippyTitle(renderer *sdl.Renderer) {
 		); err != nil {
 			log.Fatal(err)
 		}
+		renderer.Present()
 		sdl.Delay(100)
 	}
 }
@@ -46,11 +47,5 @@ func drawText(renderer *sdl.Renderer, title string, rect *sdl.Rect, color sdl.Co
 		return fmt.Errorf("could not create texture: %v", err)
 	}
 
-	err = renderer.Copy(tex, nil, rect)
-	if err != nil {
-		return fmt.Errorf("could not copy texture: %v", err)
-	}
-
-	renderer.Present()
-	return nil
+	return renderer.Copy(tex, nil, rect)
 }
